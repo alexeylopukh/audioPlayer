@@ -14,14 +14,12 @@ class AudioPlayerWidget extends StatefulWidget {
   final String url;
   final String text;
 
-  AudioPlayerWidget(
-      {@required this.url, this.text});
+  AudioPlayerWidget({@required this.url, this.text});
 
   @override
   State<StatefulWidget> createState() {
     return _AudioPlayerWidgetState(url, text);
   }
-
 }
 
 class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
@@ -42,8 +40,11 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   StreamSubscription _playerStateSubscription;
 
   get _isPlaying => _playerState == PlayerState.playing;
+
   get _isPaused => _playerState == PlayerState.paused;
+
   get _durationText => _duration?.toString()?.split('.')?.first ?? '';
+
   get _positionText => _position?.toString()?.split('.')?.first ?? '';
 
   _AudioPlayerWidgetState(this.url, this.text);
@@ -61,16 +62,16 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
     _positionSubscription =
         _audioPlayer.onAudioPositionChanged.listen((p) => setState(() {
-          _position = p;
-        }));
+              _position = p;
+            }));
 
     _playerCompleteSubscription =
         _audioPlayer.onPlayerCompletion.listen((event) {
-          _onComplete();
-          setState(() {
-            _position = _duration;
-          });
-        });
+      _onComplete();
+      setState(() {
+        _position = _duration;
+      });
+    });
 
     _playerErrorSubscription = _audioPlayer.onPlayerError.listen((msg) {
       print('audioPlayer error : $msg');
@@ -109,60 +110,69 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   }
 
   Widget controlPanel() {
-    return Row(
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 13),
-          child: Text(text,
-              style: TextStyle(
-                  color: _playerState == PlayerState.stopped
-                      ? TEXT_COLOR
-                      : PLAYED_COLOR,
-                  fontSize: 14)
-          ),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 13),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Expanded(
+              child: Text(text,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      color: _playerState == PlayerState.stopped
+                          ? TEXT_COLOR
+                          : PLAYED_COLOR,
+                      fontSize: 14)),
+            ),
+            Container(
+              child: GestureDetector(
+                onTap: () {
+                  if (_isPlaying)
+                    _pause();
+                  else
+                    _play();
+                  setState(() {});
+                },
+                child: SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Icon(
+                    _isPlaying ? Icons.pause : Icons.play_arrow,
+                    color: TEXT_COLOR,
+                  ),
+                ),
+              ),
+            )
+          ],
         ),
-        Spacer(),
-        IconButton(
-          icon: Icon(
-            _isPlaying
-                ? Icons.pause
-                : Icons.play_arrow,
-            color: TEXT_COLOR,
-          ),
-          onPressed: (){
-            if (_isPlaying)
-              _pause();
-            else
-              _play();
-            setState(() {});
-          },
-        )
-      ],
+      ),
     );
   }
 
-  Widget progressIndicator(){
+  Widget progressIndicator() {
     return Opacity(
       opacity: 0.1,
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final width = (_position != null &&
-              _duration != null &&
-              _position.inMilliseconds > 0 &&
-              _position.inMilliseconds < _duration.inMilliseconds)
-              ? constraints.maxWidth * _position.inMilliseconds / _duration.inMilliseconds
+                  _duration != null &&
+                  _position.inMilliseconds > 0 &&
+                  _position.inMilliseconds < _duration.inMilliseconds)
+              ? constraints.maxWidth *
+                  _position.inMilliseconds /
+                  _duration.inMilliseconds
               : 0.0;
           return Container(
             width: width,
             decoration: BoxDecoration(
-              color: PLAYED_COLOR,
-                borderRadius: BorderRadius.circular(4)
+                color: PLAYED_COLOR, borderRadius: BorderRadius.circular(4)
 //                constraints.maxWidth - width > 4
 //                    ? BorderRadius.only(
 //                    topLeft: Radius.circular(4),
 //                    bottomLeft: Radius.circular(4))
 //                    : BorderRadius.circular(4)
-            ),
+                ),
           );
         },
       ),
@@ -170,90 +180,28 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   }
 
   Widget scrubberController(context) {
-    if (_audioPlayerState == AudioPlayerState.STOPPED)
-      return Container();
+    if (_audioPlayerState == AudioPlayerState.STOPPED) return Container();
     return GestureDetector(
       onHorizontalDragUpdate: (DragUpdateDetails details) {
         final position = details.localPosition.dx * _duration.inMilliseconds;
         final RenderBox box = context.findRenderObject();
         final double relative = position / box.size.width;
-        _audioPlayer
-            .seek(Duration(milliseconds: relative.round()));
+        _audioPlayer.seek(Duration(milliseconds: relative.round()));
       },
     );
   }
 
-//  @override
-//  Widget build(BuildContext context) {
-//    return Column(
-//      children: <Widget>[
-//        Row(
-//          mainAxisSize: MainAxisSize.min,
-//          children: [
-//            IconButton(
-//                onPressed: _isPlaying ? null : () => _play(),
-//                iconSize: 64.0,
-//                icon: Icon(Icons.play_arrow),
-//                color: Colors.cyan),
-//            IconButton(
-//                onPressed: _isPlaying ? () => _pause() : null,
-//                iconSize: 64.0,
-//                icon: Icon(Icons.pause),
-//                color: Colors.cyan),
-//            IconButton(
-//                onPressed: _isPlaying || _isPaused ? () => _stop() : null,
-//                iconSize: 64.0,
-//                icon: Icon(Icons.stop),
-//                color: Colors.cyan),
-//          ],
-//        ),
-//        Column(
-//          mainAxisSize: MainAxisSize.min,
-//          children: [
-//            Padding(
-//              padding: EdgeInsets.all(12.0),
-//              child: Stack(
-//                children: [
-//                  Slider(
-//                    onChanged: (v) {
-//                      final Position = v * _duration.inMilliseconds;
-//                      _audioPlayer
-//                          .seek(Duration(milliseconds: Position.round()));
-//                    },
-//                    value: (_position != null &&
-//                        _duration != null &&
-//                        _position.inMilliseconds > 0 &&
-//                        _position.inMilliseconds < _duration.inMilliseconds)
-//                        ? _position.inMilliseconds / _duration.inMilliseconds
-//                        : 0.0,
-//                  ),
-//                ],
-//              ),
-//            ),
-//            Text(
-//              _position != null
-//                  ? '${_positionText ?? ''} / ${_durationText ?? ''}'
-//                  : _duration != null ? _durationText : '',
-//              style: TextStyle(fontSize: 24.0),
-//            ),
-//          ],
-//        ),
-//        Text("State: $_audioPlayerState")
-//      ],
-//    );
-//  }
-
   Future<int> _play() async {
     final playPosition = (_position != null &&
-        _duration != null &&
-        _position.inMilliseconds > 0 &&
-        _position.inMilliseconds < _duration.inMilliseconds)
+            _duration != null &&
+            _position.inMilliseconds > 0 &&
+            _position.inMilliseconds < _duration.inMilliseconds)
         ? _position
         : null;
     final result = await _audioPlayer.play(url, position: playPosition);
     if (result == 1) setState(() => _playerState = PlayerState.playing);
     return result;
-    }
+  }
 
   Future<int> _pause() async {
     final result = await _audioPlayer.pause();
