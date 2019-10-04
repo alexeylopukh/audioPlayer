@@ -102,50 +102,26 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       child: Stack(
         children: <Widget>[
           progressIndicator(),
-          controlPanel(),
-          scrubberController(context)
+          textWidget(),
+          scrubberController(context),
+          buttonWidget()
         ],
       ),
     );
   }
 
-  Widget controlPanel() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 13),
-      child: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Expanded(
-              child: Text(text,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      color: _playerState == PlayerState.stopped
-                          ? TEXT_COLOR
-                          : PLAYED_COLOR,
-                      fontSize: 14)),
-            ),
-            Container(
-              child: GestureDetector(
-                onTap: () {
-                  if (_isPlaying)
-                    _pause();
-                  else
-                    _play();
-                  setState(() {});
-                },
-                child: SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: Icon(
-                    _isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: TEXT_COLOR,
-                  ),
-                ),
-              ),
-            )
-          ],
-        ),
+  Widget textWidget() {
+    return Align(
+      alignment: Alignment.center,
+      child: Padding(
+        padding: EdgeInsets.only(left: 13, right: 37),
+        child: Text(text,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                color: _playerState == PlayerState.stopped
+                    ? TEXT_COLOR
+                    : PLAYED_COLOR,
+                fontSize: 14))
       ),
     );
   }
@@ -183,12 +159,45 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     if (_audioPlayerState == AudioPlayerState.STOPPED) return Container();
     return GestureDetector(
       onHorizontalDragUpdate: (DragUpdateDetails details) {
-        final position = details.localPosition.dx * _duration.inMilliseconds;
-        final RenderBox box = context.findRenderObject();
-        final double relative = position / box.size.width;
-        _audioPlayer.seek(Duration(milliseconds: relative.round()));
+        seekToRelativePosition(details.localPosition.dx);
+      },
+      onTapUp: (TapUpDetails details) {
+        seekToRelativePosition(details.localPosition.dx);
       },
     );
+  }
+
+  Widget buttonWidget(){
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: GestureDetector(
+          onTap: () {
+            if (_isPlaying)
+              _pause();
+            else
+              _play();
+            setState(() {});
+          },
+          child: SizedBox(
+            height: 24,
+            width: 24,
+            child: Icon(
+              _isPlaying ? Icons.pause : Icons.play_arrow,
+              color: TEXT_COLOR,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  seekToRelativePosition(double tapPosition) {
+    final position = tapPosition * _duration.inMilliseconds;
+    final RenderBox box = context.findRenderObject();
+    final double relative = position / box.size.width;
+    _audioPlayer.seek(Duration(milliseconds: relative.round()));
   }
 
   Future<int> _play() async {
