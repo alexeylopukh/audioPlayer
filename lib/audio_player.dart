@@ -112,7 +112,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
   Widget textWidget() {
     return Align(
-      alignment: Alignment.center,
+      alignment: Alignment.centerLeft,
       child: Padding(
         padding: EdgeInsets.only(left: 13, right: 37),
         child: Text(text,

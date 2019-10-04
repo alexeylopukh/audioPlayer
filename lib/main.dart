@@ -34,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: AudioPlayerWidget(
               url: "https://cdn5.sefon.me/download/9oMiCKtY_bIoiqgz-tNMfQ/1570220151/69/Linkin%20Park%20-%20In%20The%20End.mp3",
               text: "RR Podcasts S2E14 - Trump or Drumm?"),
